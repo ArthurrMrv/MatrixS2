@@ -3,27 +3,83 @@ from .Vector import Vector
 from typing import List, Tuple
 
 
-def powerItEigenvalue(A: Matrix, max_iter=100, tolerance=1e-10) -> Tuple[float, Vector]:
+# def powerItEigenvalue(A: Matrix, max_iter=100, tolerance=1e-10) -> Tuple[float, Vector]:
+#     """
+#     Function to compute the dominant eigenvalue and eigenvector of a matrix using the power iteration method.
+#     """
+
+#     n = A._nbRows
+#     x = Vector([[1] for _ in range(n)])
+
+#     for _ in range(max_iter):
+#         x_old = x.copy()
+#         x : Vector = A * x
+#         x.normalize()
+
+#         # Check for convergence
+#         if max([abs(x[i][0] - x_old[i][0]) for i in range(n)]) < tolerance:
+#             break
+
+#     eigenvalue = (x.transpose() * A * x)[0][0]
+#     eigenvector = x.copy()
+
+#     return eigenvalue, eigenvector
+
+# def getSVD_power(A: Matrix) -> tuple[Matrix, Matrix, Matrix]:
+#     if A._nbColumns < A._nbRows:
+#         return A.transpose().getSVD()
+
+#     # Compute dominant eigenvalue and eigenvector of A*A^T
+#     eigenvalue, eigenvector = powerItEigenvalue(A * A.transpose())
+
+#     # Calculate sigma
+#     sigma = Matrix.create_diagonal([eigenvalue ** 0.5 for _ in range(A._nbRows)])
+
+#     # Calculate U
+#     U = A * eigenvector
+#     U.normalize_columns()
+
+#     # Calculate V
+#     V = (A.transpose() * U * sigma.inverse()).transpose()
+
+#     return U, sigma, V
+
+def qr_algorithm(A: Matrix, num_iterations: int = 10) -> tuple[list, list]:
+    """Find the eigenvalues and eigenvectors of a matrix using the QR algorithm.
+
+    Args:
+        A (Matrix): matrix to find the eigenvalues and eigenvectors of.
+        num_iterations (int, optional): number of iterations . Defaults to 10.
+
+    Returns:
+        tuple[list, list]: eigenvalues and eigenvectors of the matrix.
     """
-    Function to compute the dominant eigenvalue and eigenvector of a matrix using the power iteration method.
-    """
+    Q = Matrix([[0] * A._nbRows for _ in range(A._nbRows)], mutable=True)
+    R = Matrix([[0] * A._nbColumns for _ in range(A._nbColumns)], mutable=True)
+    
+    for _ in range(num_iterations):
+        # Perform QR decomposition
+        for j in range(A._nbColumns):
+            v = Vector([[e] for e in A[j]])
+            for i in range(j):
+                vect_Qi = Vector(Q[i])
+                R[i, j] = Vector.dotProduct(vect_Qi, v)
+                v = v - (vect_Qi * R[i, j])
 
-    n = A._nbRows
-    x = Vector([[1] for _ in range(n)])
+            norm_v = v.norm()
+            if norm_v == 0:  # Handle division by zero
+                continue
 
-    for _ in range(max_iter):
-        x_old = x.copy()
-        x : Vector = A * x
-        x.normalize()
+            R[j, j] = norm_v
+            Q[j] = [x[0] / R[j, j] for x in v]
 
-        # Check for convergence
-        if max([abs(x[i][0] - x_old[i][0]) for i in range(n)]) < tolerance:
-            break
+        # Update A with RQ
+        A = R * Q
 
-    eigenvalue = (x.transpose() * A * x)[0][0]
-    eigenvector = x.copy()
-
-    return eigenvalue, eigenvector
+    eigenvalues = [A[i][i] for i in range(A._nbRows)]
+    eigenvectors = [Vector(Q[i]) for i in range(Q._nbRows)]
+    
+    return eigenvalues, eigenvectors
 
 def qr_decomposition(A : Matrix) -> tuple[Matrix, Matrix]:
 
@@ -46,25 +102,6 @@ def qr_decomposition(A : Matrix) -> tuple[Matrix, Matrix]:
         Q[j] = [x[0] / R[j, j] for x in v]
 
     return Q, R
-
-def getSVD_power(A: Matrix) -> tuple[Matrix, Matrix, Matrix]:
-    if A._nbColumns < A._nbRows:
-        return A.transpose().getSVD()
-
-    # Compute dominant eigenvalue and eigenvector of A*A^T
-    eigenvalue, eigenvector = powerItEigenvalue(A * A.transpose())
-
-    # Calculate sigma
-    sigma = Matrix.create_diagonal([eigenvalue ** 0.5 for _ in range(A._nbRows)])
-
-    # Calculate U
-    U = A * eigenvector
-    U.normalize_columns()
-
-    # Calculate V
-    V = (A.transpose() * U * sigma.inverse()).transpose()
-
-    return U, sigma, V
 
 def getSVD_qr(A : Matrix) -> tuple[Matrix, list, Matrix]:
     Q, R    = qr_decomposition(A)

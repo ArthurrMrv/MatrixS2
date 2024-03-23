@@ -347,3 +347,35 @@ class Matrix:
             col = self.get_column(j)
             col.normalize()
             self.set_column(j, col)
+            
+    def matrix_norm(self, norm_type: str = 'L2') -> float:
+        """
+        Compute the L1, L2, or Linf norm of a given matrix.
+
+        Parameters:
+            matrix (list[list[int]]): The input matrix.
+            norm_type (str): The type of norm to compute. Options: 'L1', 'L2', or 'Linf'.
+
+        Returns:
+            float: The computed norm.
+
+        Raises:
+            ValueError: If an invalid norm type is specified.
+        """
+        n_rows, n_cols = self.get_shape()
+        norm = 0
+        if norm_type == 'L1':
+            for i in range(n_rows):
+                for j in range(n_cols):
+                    norm += abs(self[i][j])
+        elif norm_type == 'L2':
+            for i in range(n_rows):
+                for j in range(n_cols):
+                    norm += self[i][j] ** 2
+            norm = norm ** 0.5
+        elif norm_type == 'Linf':
+            max_row_sum = max(sum(map(abs, row)) for row in self.get_values())
+            norm = max_row_sum
+        else:
+            raise ValueError("Invalid norm type. Please choose from 'L1', 'L2', or 'Linf'.")
+        return norm
