@@ -1,0 +1,78 @@
+
+
+.matrix-and-change-rows {
+    display: flex;
+    flex-direction: row;
+    /* Stack elements horizontally */
+    justify-content: center;
+    align-items: center;
+    /* Center items vertically */
+    margin-bottom: 20px;
+}
+
+.matrix-container {
+    display: flex;
+    flex-direction: column;
+    /* Stack elements vertically */
+    justify-content: center;
+    align-items: center;
+    /* Center items horizontally */
+    margin-bottom: 20px;
+}
+
+div#calculus {
+    display: flex;
+    gap: 20px; /* Add spacing between elements */
+
+}
+
+.change-column {
+    align-self: center;
+    /* Align to the start of the flex container (top) */
+}
+
+.matrix {
+    align-self: center;
+    /* Align to the center of the flex container (middle) */
+}
+
+.change-row {
+    /* align to the top */
+    align-self: flex-start;
+}
+
+.cell {
+    width: 50px;
+    text-align: center;
+}
+
+.matrix-and-change-rows {
+    display: flex;
+    flex-direction: row;
+    /* Stack elements horizontally */
+    justify-content: center;
+    align-items: center;
+    /* Center items vertically */
+    margin-bottom: 0px;
+}
+
+#execute {
+    display: flex;
+    flex-direction: column; /* Align items vertically */
+    justify-content: center; /* Center items horizontally */
+    align-items: center; /* Center items vertically */
+}
+
+#ans-query {
+    display: flex;
+    gap: 10px; /* Add spacing between elements */
+}
+
+button.enabled {
+    background-color: #4CAF50; /* Green */
+    color: white;
+}
+
+.hidden {
+    display: none;
+}

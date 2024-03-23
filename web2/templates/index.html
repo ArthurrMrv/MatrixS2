@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Editor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+</head>
+
+<body>
+    <h1>Matrix Editor</h1>
+    <div id="calculus">
+        <!-- Matrices  -->
+    </div>
+    <div id="buttons">
+        <!-- Buttons -->
+    </div>
+    <div id="execute">
+        <div id="ans-query">
+            <p>Answer: </p>
+            <p id="ans"></p>
+        </div>
+        <button id="execute">Execute</button>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
