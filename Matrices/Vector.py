@@ -1,4 +1,4 @@
-from .Matrix import Matrix
+from Matrix import Matrix
 from typing import Iterable
 
 class Vector(Matrix):
@@ -54,3 +54,13 @@ class Vector(Matrix):
         
     def __sub__(self, other) -> Matrix:
         return Vector(super().__sub__(other))
+    
+    def __getitem__(self, index):
+        if self.isColVector():
+            return self.get_values()[index][0]
+        else:
+            return self.get_values()[0][index]
+        
+    def __iter__(self):
+        for i in range(max(self.get_shape())):
+            yield self[i]

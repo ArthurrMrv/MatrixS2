@@ -1,4 +1,4 @@
-function createMatrix(parent, m = 2, n = 2) {
+function createMatrix(parent, m = 2, n = 2, values = [[]]) {
 
     let id = Date.now();
 
@@ -45,7 +45,7 @@ function createMatrix(parent, m = 2, n = 2) {
         let row = document.createElement("div");
         row.classList.add("row");
         for (let j = 0; j < n; j++) {
-            row.appendChild(createCell(i, j));
+            row.appendChild(createCell(i, j, values.length == m && values[0].length == n ? values[i][j] : 0));
         }
         matrix.appendChild(row);
     }
@@ -84,6 +84,49 @@ function createMatrix(parent, m = 2, n = 2) {
     }
 
     matrices.push(id);
+
+    return container;
+}
+
+function matrixAnswer(parent, m = 2, n = 2, values = [[]]) {
+
+    let id = Date.now();
+
+    let container = parent.appendChild(document.createElement("table"));
+    container.classList.add("matrix-container");
+    container.setAttribute("id-matrix", id);
+    container.setAttribute("nbRows", m);
+    container.setAttribute("nbCols", n);
+
+    let matrixAndChangeRows = container.appendChild(document.createElement("tr"));
+    matrixAndChangeRows.classList.add("matrix-and-change-rows");
+
+    let tdMatrix = matrixAndChangeRows.appendChild(document.createElement("td"));
+    tdMatrix.classList.add("td-matrix");
+
+    let tdChangeRows = matrixAndChangeRows.appendChild(document.createElement("td"));
+    tdChangeRows.classList.add("td-change-rows");
+
+    let tdChangeColumns = container.appendChild(document.createElement("tr"));
+    tdChangeColumns.classList.add("td-change-columns");
+
+    let matrix = tdMatrix.appendChild(document.createElement("div"));
+    matrix.classList.add("matrix");
+
+    let changeRows = tdChangeRows.appendChild(document.createElement("div"));
+    changeRows.classList.add("change-rows");
+
+    let changeColumns = tdChangeColumns.appendChild(document.createElement("div"));
+    changeColumns.classList.add("change-columns");
+
+    for (let i = 0; i < m; i++) {
+        let row = document.createElement("div");
+        row.classList.add("row");
+        for (let j = 0; j < n; j++) {
+            row.appendChild(createCell(i, j, values.length == m && values[0].length == n ? values[i][j] : 0));
+        }
+        matrix.appendChild(row);
+    }
 
     return container;
 }
@@ -156,10 +199,10 @@ function delRow() {
     matrix.setAttribute("nbRows", parseInt(matrix.getAttribute("nbRows")) - 1); // Decrement the number of rows
 }
 
-function createCell(i, j) {
+function createCell(i, j, value = 0) {
     let input = document.createElement("input");
     input.setAttribute("type", "text");
-    input.setAttribute("value", "0");
+    input.setAttribute("value", `${value}`);
     input.setAttribute("value-row", i);
     input.setAttribute("value-col", j);
     input.classList.add("cell")
@@ -248,41 +291,42 @@ function apiCall(method) {
     data_to_send["matrices"] = dataMatrices();
     data_to_send["method"] = method;
 
-    // pythonProcess.stdout.on('data', (data) => {
-    //     data = JSON.parse(data.toString());
-    //     if (data["error"] != "") {
-    //         alert(data["error"]);
-    //         return undefined;
-    //     }
+    // Convert JavaScript object to JSON string
+    let json_data = JSON.stringify(data_to_send);
 
-    //     // create a new matrix with the 2D array data["result"]
-    //     let m = data["result"].length;
-    //     let n = data["result"][0].length;
+    // Send AJAX request to Flask app
+    $.ajax({
+        type: 'POST',
+        url: '/call_function', // Change this to your Flask route
+        contentType: 'application/json',
+        data: json_data,
+        success: function (response) {
+            console.log("Data sent successfully");
 
-    //     let parent = document.querySelector("div#ans-query");
-    //     parent.childNodes.forEach((child) => {
-    //         parent.removeChild(child);
-    //     });
+            // Handle response from Flask app if needed
+            parent = document.querySelector("p#ans");
+            parent.innerHTML = "";
 
+            if (response["result"]["type"] == "matrix") {
+                matrixAnswer(parent, response["result"]["content"].length, response["result"]["content"][0].length, response["result"]["content"]);
+                console.log(response);
+            } else if (response["result"]["type"] == "number") {
+                let p = parent.appendChild(document.createElement("p"));
+                p.innerText = response["result"]["content"];
+            } else if (response["result"]["type"] == "list[number]") {
+                for (let i = 0; i < response["result"]["content"].length; i++) {
+                    let p = parent.appendChild(document.createElement("p"));
+                    p.innerText = response["result"]["content"][i];
+                }
+            } else {
+                console.log("Unknown type of response");
+            }
 
-    //     let container = parent.appendChild(document.createElement("table"));
-    //     container.classList.add("matrix-container");
-
-    //     let matrix = container.appendChild(document.createElement("tr"));
-    //     matrix.classList.add("matrix");
-
-    //     for (let i = 0; i < m; i++) {
-    //         let row = document.createElement("tr");
-    //         for (let j = 0; j < n; j++) {
-    //             let cell = document.createElement("td");
-    //             cell.innerText = data["result"][i][j];
-    //             row.appendChild(cell);
-    //         }
-    //         matrix.appendChild(row);
-    //     }
-
-    // });
-    return data;
+        },
+        error: function (error) {
+            console.error("Error sending data: ", error);
+        }
+    })
 }
 
 function dataMatrices() {

@@ -1,48 +1,5 @@
 from .Matrix import Matrix
 from .Vector import Vector
-from typing import List, Tuple
-
-
-# def powerItEigenvalue(A: Matrix, max_iter=100, tolerance=1e-10) -> Tuple[float, Vector]:
-#     """
-#     Function to compute the dominant eigenvalue and eigenvector of a matrix using the power iteration method.
-#     """
-
-#     n = A._nbRows
-#     x = Vector([[1] for _ in range(n)])
-
-#     for _ in range(max_iter):
-#         x_old = x.copy()
-#         x : Vector = A * x
-#         x.normalize()
-
-#         # Check for convergence
-#         if max([abs(x[i][0] - x_old[i][0]) for i in range(n)]) < tolerance:
-#             break
-
-#     eigenvalue = (x.transpose() * A * x)[0][0]
-#     eigenvector = x.copy()
-
-#     return eigenvalue, eigenvector
-
-# def getSVD_power(A: Matrix) -> tuple[Matrix, Matrix, Matrix]:
-#     if A._nbColumns < A._nbRows:
-#         return A.transpose().getSVD()
-
-#     # Compute dominant eigenvalue and eigenvector of A*A^T
-#     eigenvalue, eigenvector = powerItEigenvalue(A * A.transpose())
-
-#     # Calculate sigma
-#     sigma = Matrix.create_diagonal([eigenvalue ** 0.5 for _ in range(A._nbRows)])
-
-#     # Calculate U
-#     U = A * eigenvector
-#     U.normalize_columns()
-
-#     # Calculate V
-#     V = (A.transpose() * U * sigma.inverse()).transpose()
-
-#     return U, sigma, V
 
 def qr_algorithm(A: Matrix, num_iterations: int = 10) -> tuple[list, list]:
     """Find the eigenvalues and eigenvectors of a matrix using the QR algorithm.

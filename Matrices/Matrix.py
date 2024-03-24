@@ -7,6 +7,10 @@ def importVector():
     from .Vector import Vector
     return Vector
 
+def importFunctions():
+    import Functions
+    return Functions
+    
 class Matrix:
     
     def __init__(self, values : list[list], *, mutable = False, nbColumns = None, nbRows = None) -> None:
@@ -70,74 +74,6 @@ class Matrix:
     def getMinor(self, i : int, j : int) -> 'Matrix':
         return Matrix([self.values[k] for k in range(len(self.values)) if k//self._nbColumns != i and k%self._nbColumns != j], nbColumns=self._nbColumns-1)
 
-    def powerItEigenvalue(self, max_iter=100, tolerance=1e-10):
-        """
-        Function to compute the eigenvalues and eigenvectors of a matrix using the power iteration method.
-        """
-        Vector = importVector()  # Avoiding circular import
-        
-        n = len(self)
-        x = Vector([[1] for _ in range(n)])
-        eigenvalues = []
-        eigenvectors = []
-
-        for _ in range(max_iter):
-            x_old = x.copy()
-            x = self * x
-
-            x.normalize()
-
-            # Check for convergence
-            if max([abs(x[i][0] - x_old[i][0]) for i in range(n)]) < tolerance:
-                break
-
-        eigenvalue = self * x
-        eigenvector = x
-        eigenvalues.append(eigenvalue[0][0])
-        eigenvectors.append(eigenvector)
-
-        return eigenvalues, eigenvectors
-    
-    def getSVD(self) -> tuple:
-        if self._nbColumns < self._nbRows:
-            return self.transpose().getSVD()
-        A = self * self.transpose()
-        eigenvalues, eigenvectors = A.powerItEigenvalue()
-        sigma = Matrix([[eigenvalues[i]**0.5 if i == j else 0 for j in range(self._nbRows)] for i in range(self._nbRows)])
-        U = Matrix(eigenvectors)
-        V = (self.transpose() * U * sigma.inverse()).transpose()
-        return U, sigma, V
-    
-    def qr_decomposition(self):
-        Vector = importVector()  # Avoiding circular import
-        
-        Q = Matrix([[0] * self._nbRows for _ in range(self._nbRows)], mutable=True)
-        R = Matrix([[0] * self._nbColumns for _ in range(self._nbColumns)], mutable=True)
-
-        for j in range(self._nbColumns):
-            v = Vector([[e] for e in self[j]])
-            for i in range(j):
-                vect_Qi = Vector(Q[i])
-                R[i, j] = Vector.dotProduct(vect_Qi, v)
-                v = v - (vect_Qi * R[i, j])
-                
-            norm_v = v.norm()
-            if norm_v == 0:  # Handle division by zero
-                continue
-
-            R[j, j] = norm_v
-            #R[j][j] = v.norm()
-            Q[j] = [x[0] / R[j, j] for x in v]
-            
-        return Q, R
-    
-    def svd_qr(self):
-        Q, R    = self.qr_decomposition()
-        U       = Q.copy()  # Left singular vectors
-        Sigma   = [R[i, i] for i in range(R._nbRows)]  # Singular values
-        VT      = Q.transpose() * self  # Right singular vectors
-        return U, Sigma, VT.transpose()
-    
     def transpose(self) -> 'Matrix':
         return Matrix([[self.values[j*self._nbColumns+i] for j in range(self._nbRows)] for i in range(self._nbColumns)])
     
@@ -272,6 +208,14 @@ class Matrix:
             return self.get_values()[i][j]
         else:
             return self.get_values()[index]
+        
+    def get_column(self, j):
+        Vector = importVector()
+        return Vector([self.data[i][j] for i in range(self._nbRows)])
+    
+    def get_row(self, i):
+        Vector = importVector()
+        return Vector(self.data[i])
     
     def __setitem__(self, index, value):
         
@@ -363,19 +307,20 @@ class Matrix:
             ValueError: If an invalid norm type is specified.
         """
         n_rows, n_cols = self.get_shape()
-        norm = 0
         if norm_type == 'L1':
-            for i in range(n_rows):
-                for j in range(n_cols):
-                    norm += abs(self[i][j])
+            # max of the sum of the absolute values for each columns
+            return max([sum([abs(e) for e in self.get_column(i)]) for i in range(n_cols)])
         elif norm_type == 'L2':
-            for i in range(n_rows):
-                for j in range(n_cols):
-                    norm += self[i][j] ** 2
-            norm = norm ** 0.5
+            f = importFunctions()
+            #square root of the max eigenvalue
+            return max(f.qr_algorithm(self)[0])**0.5
         elif norm_type == 'Linf':
-            max_row_sum = max(sum(map(abs, row)) for row in self.get_values())
-            norm = max_row_sum
+            # max of the sum of the absolute values for each rows
+            return max([sum([abs(e) for e in self.get_row(i)]) for i in range(n_rows)])
         else:
             raise ValueError("Invalid norm type. Please choose from 'L1', 'L2', or 'Linf'.")
-        return norm
+    
+    def __iter__(self):
+        nb_rows, nb_columns = self.get_shape()
+        for i in range(nb_rows*nb_columns):
+            yield self.values[i]
