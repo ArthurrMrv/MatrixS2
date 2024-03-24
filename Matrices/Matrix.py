@@ -8,8 +8,8 @@ def importVector():
     return Vector
 
 def importFunctions():
-    import Functions
-    return Functions
+    import Functions as f
+    return f
     
 class Matrix:
     

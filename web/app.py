@@ -5,10 +5,10 @@ import sys
 import os
 import numpy as np
 
-# Add the directory containing the Matrix module to the Python path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import Matrices
 
+# Add the directory containing the Matrix module to the Python path
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# import Matrices as mat
 
 # Create a Flask application instance
 app = Flask(__name__)
@@ -23,13 +23,12 @@ def receive_data():
     data = request.json  # Get JSON data from the request
     # Process the data here
     # For example, you can access data["matrices"] and data["method"]
+    ans = dict()
     
-    result = analyse_function_call(data)
-
-    response_data = {
-        "result": result.tolist(),
-    }
-
+    ans["type"], ans["content"] = analyse_function_call(data)
+    if type(ans["content"]) == np.ndarray:
+        ans["content"] = ans["content"].tolist()
+    response_data = ans
     return jsonify(response_data)
 
 def analyse_function_call(data):
@@ -37,46 +36,38 @@ def analyse_function_call(data):
     match data["method"]:
         case "add":
             if len(matrices) < 2:
-                return "Error: At least two matrices are required for addition"
-            return {"type" : 'matrix', 
-                    "content" : np.add(matrices[0], matrices[1])}
+                return  ('text', "Error: At least two matrices are required for addition")
+            return ('matrix', np.add(matrices[0], matrices[1]))
         case "subtract":
             if len(matrices) < 2:
-                return "Error: At least two matrices are required for subtraction"
-            return {"type" : 'matrix', 
-                    "content" : np.subtract(matrices[0], matrices[1])}
+                return ('text', "Error: At least two matrices are required for substraction")
+            return ('matrix',np.subtract(matrices[0], matrices[1]))
         case "multiply":
             if len(matrices) < 2:
-                return "Error: At least two matrices are required for multiplication"
-            return {"type" : 'matrix', 
-                    "content" : np.matmul(matrices[0], matrices[1])}
+                return ('text', "Error: At least two matrices are required for multiplication")
+            return ('matrix', np.matmul(matrices[0], matrices[1]))
         case "transpose":
             if len(matrices) > 1:
-                return "Error: Only one matrix is required for transpose"
-            return {"type" : 'matrix',
-                    "content" : np.transpose(matrices[0])}
+                return ('text', "Error: Only one matrix is required for transpose")
+            return ('matrix', np.transpose(matrices[0]))
         case "determinant":
             if len(matrices) > 1:
-                return "Error: Only one matrix is required for determinant"
-            return {"type" : 'number',
-                    "content" : np.linalg.det(matrices[0])}
+                return ('text', "Error: Only one matrix is required for determinant")
+            return ('number', np.linalg.det(matrices[0]))
         case "inverse":
             if len(matrices) > 1:
-                return "Error: Only one matrix is required for inverse"
-            return {"type" : 'matrix',
-                    "content" : np.linalg.inv(matrices[0])}
+                return ('text', "Error: Only one matrix is required for inverse")
+            return ('matrix', np.linalg.inv(matrices[0]))
         case "eigenvalues":
             if len(matrices) > 1:
-                return "Error: Only one matrix is required for eigenvalues"
-            return {"type" : 'list[numbers]',
-                    "content" : np.linalg.eigvals(matrices[0])}
+                return ('text', "Error: Only one matrix is required for eigenvalues")
+            return ('text', np.linalg.eig(matrices[0])[0])
         case "eigenvectors":
             if len(matrices) > 1:
-                return "Error: Only one matrix is required for eigenvectors"
-            return {"type" : 'matrix',
-                    "content" : np.linalg.eig(matrices[0])[1]}
+                return ('text', "Error: Only one matrix is required for eigenvectors")
+            return ('list[matrix]', [[[e] for e in m ] for m in np.linalg.eig(matrices[0])[1]])
         case _:
-            return "Error: Invalid method"
+            return ('text', "Error: Invalid method")
         
 def matrices_to_np(data):
     matrices = []

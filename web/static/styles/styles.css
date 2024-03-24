@@ -23,7 +23,6 @@
 div#calculus {
     display: flex;
     gap: 20px; /* Add spacing between elements */
-
 }
 
 .change-column {

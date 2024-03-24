@@ -1,4 +1,4 @@
-from Matrix import Matrix
+from .Matrix import Matrix
 from typing import Iterable
 
 class Vector(Matrix):

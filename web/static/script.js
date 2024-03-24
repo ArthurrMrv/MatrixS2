@@ -306,17 +306,24 @@ function apiCall(method) {
             // Handle response from Flask app if needed
             parent = document.querySelector("p#ans");
             parent.innerHTML = "";
-
-            if (response["result"]["type"] == "matrix") {
-                matrixAnswer(parent, response["result"]["content"].length, response["result"]["content"][0].length, response["result"]["content"]);
+            console.log(response);
+            if (response["type"] == "matrix") {
+                matrixAnswer(parent, response["content"].length, response["content"][0].length, response["content"]);
                 console.log(response);
-            } else if (response["result"]["type"] == "number") {
+            } else if (response["type"] == "number") {
                 let p = parent.appendChild(document.createElement("p"));
-                p.innerText = response["result"]["content"];
-            } else if (response["result"]["type"] == "list[number]") {
-                for (let i = 0; i < response["result"]["content"].length; i++) {
+                p.innerText = response["content"];
+            } else if (response["type"] == "list[number]") {
+                for (let i = 0; i < response["content"].length; i++) {
                     let p = parent.appendChild(document.createElement("p"));
-                    p.innerText = response["result"]["content"][i];
+                    p.innerText = response["content"][i];
+                }
+            } else if (response["type"] == "text") {
+                let p = parent.appendChild(document.createElement("p"));
+                p.innerText = response["content"];
+            } else if (response["type"] == "list[matrix]") {
+                for (let i = 0; i < response["content"].length; i++) {
+                    matrixAnswer(parent, response["content"][i].length, response["content"][i][0].length, response["content"][i]);
                 }
             } else {
                 console.log("Unknown type of response");
@@ -437,7 +444,17 @@ let buttonsToCreate = {
         functionID: "inverse",
         text: "Inverse",
         nbMatrices: 1
-    }
+    },
+    eigenvalues: {
+        functionID: "eigenvalues",
+        text: "Eigenvalues",
+        nbMatrices: 1
+    },
+    eigenvectors: {
+        functionID: "eigenvectors",
+        text: "Eigenvectors",
+        nbMatrices: 1
+    },
 }
 
 let NB_MAX_MATRICES = 2;
