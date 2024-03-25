@@ -28,7 +28,6 @@ def plot_singular_values(matrix):
     plt.grid(True)
     plt.savefig('data/singular_values.png')
 
-
 def plot_eigenvalues_comparison(A):
 
     your_eigenvalues = f.qr_algorithm(A)[0]
