@@ -426,7 +426,7 @@ let buttonsToCreate = {
         nbMatrices: 2
     },
     multiply: {
-        functionID: "mulptiply",
+        functionID: "multiply",
         text: "Multiply",
         nbMatrices: 2
     },

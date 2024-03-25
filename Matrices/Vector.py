@@ -53,10 +53,12 @@ class Vector(Matrix):
         return Vector(Matrix.__mul__(self, other).get_values())
         
     def __sub__(self, other) -> Matrix:
-        return Vector(super().__sub__(other))
+        return Vector(Matrix.__sub__(self, other).get_values())
     
     def __getitem__(self, index):
-        if self.isColVector():
+        if type(index) == tuple:
+            return self.get_values()[index[0]][index[1]]
+        elif self.isColVector():
             return self.get_values()[index][0]
         else:
             return self.get_values()[0][index]
@@ -64,3 +66,6 @@ class Vector(Matrix):
     def __iter__(self):
         for i in range(max(self.get_shape())):
             yield self[i]
+            
+    def div(self, other : int) -> 'Vector':
+        return Vector([[elem / other for elem in l]  for l in self.get_values()])

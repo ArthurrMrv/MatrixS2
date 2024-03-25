@@ -6,10 +6,6 @@ from collections.abc import Iterable
 def importVector():
     from .Vector import Vector
     return Vector
-
-def importFunctions():
-    import Functions as f
-    return f
     
 class Matrix:
     
@@ -18,7 +14,7 @@ class Matrix:
         if isinstance(values[0], Iterable):
             if (nbColumns, nbRows) not in ((len(values[0]), len(values)), (None, None)):
                 raise ValueError("Got unmatching nbColumns ({}) and nbRows ({}) for a {}x{} matrix".format(nbColumns, nbRows, len(values[0]), len(values)))
-
+            
             self.values             = list(sum(values, type(values[0])())) if mutable else tuple(sum(values, type(values[0])())) 
 
             self._nbColumns : int   = len(values[0])
@@ -85,33 +81,6 @@ class Matrix:
             raise ValueError("The matrix is not invertible")
         return Matrix([[self.getMinor(j, i).getDeterminant() * (-1)**(i+j) / determinant for j in range(self._nbColumns)] for i in range(self._nbRows)])
     
-    def solve_linear_system(self, b):
-        Vector = importVector()  # Avoiding circular import
-        
-        # Construct augmented matrix [A | b]
-        augmented_matrix = Matrix([row + [bi] for row, bi in zip(self.get_values(), b.get_values())], mutable=True)
-
-        # Gaussian Elimination
-        for i in range(len(augmented_matrix)-1):
-            pivot_row = max(range(i, len(augmented_matrix)), key=lambda j: abs(augmented_matrix[j][i]))
-            augmented_matrix[i], augmented_matrix[pivot_row] = augmented_matrix[pivot_row], augmented_matrix[i]
-            
-            pivot = augmented_matrix[i, i]
-            for j in range(i+1, len(augmented_matrix)):
-                factor = augmented_matrix[j, i] / pivot
-                for k in range(i, len(augmented_matrix[0])):
-                    augmented_matrix[j, k] -= factor * augmented_matrix[i][k]
-
-        # Back Substitution
-        x = Vector([0] * len(self[0]), mutable=True)
-        for i in range(len(augmented_matrix)-1, -1, -1):
-            x[i] = augmented_matrix[i, -1]
-            for j in range(i+1, len(augmented_matrix[0])-1):
-                x[i] -= augmented_matrix[i, j] * x[j]
-            x[i] /= augmented_matrix[i, i]
-
-        return x
-    
     def threshold_matrix(self, threshold):
         # return Matrix([map(lambda x : 1 if x >= threshold else 0, row) for row in self.get_values()]) # with a Lamda function
         return Matrix([[1 if element >= threshold else 0 for element in row] for row in self.get_values()])
@@ -143,6 +112,10 @@ class Matrix:
     def randomFloatMatrix(nbRows : int, nbColumns : int, low : float, high : float, *, mutable = False) -> 'Matrix':
         return Matrix([[random.uniform(low, high) for _ in range(nbColumns)] for _ in range(nbRows)], mutable=mutable)
     
+    @staticmethod
+    def zeros(nbRows : int, nbColumns : int, *, mutable = False) -> 'Matrix':
+        return Matrix([[0 for _ in range(nbColumns)] for _ in range(nbRows)], mutable=mutable)
+    
     #--- Basic operations ---
     def copy(self) -> 'Matrix':
         return Matrix(self.get_values())
@@ -163,7 +136,7 @@ class Matrix:
         if self.get_shape() != other.get_shape():
             raise ValueError("Matrices must have the same shape")
         
-        return Matrix([[self.values[i*self._nbColumns+j] + other.values[i*other.nbColumns+j] for j in range(self._nbColumns)] for i in range(self._nbRows)])
+        return Matrix([[self.values[i*self._nbColumns+j] + other.values[i*other._nbColumns+j] for j in range(self._nbColumns)] for i in range(self._nbRows)])
     
     def __iadd__(self, other) -> 'Matrix':
         return self + other
@@ -211,11 +184,11 @@ class Matrix:
         
     def get_column(self, j):
         Vector = importVector()
-        return Vector([self.data[i][j] for i in range(self._nbRows)])
+        return Vector([self.get_values()[i][j] for i in range(self._nbRows)])
     
     def get_row(self, i):
         Vector = importVector()
-        return Vector(self.data[i])
+        return Vector(self.get_values()[i])
     
     def __setitem__(self, index, value):
         
@@ -276,7 +249,7 @@ class Matrix:
     
     def get_column(self, j):
         Vector = importVector()
-        return Vector([self.data[i][j] for i in range(self._nbRows)])
+        return Vector([self.get_values()[i][j] for i in range(self._nbRows)])
     
     @staticmethod
     def create_diagonal(values : list, *, mutable = False) -> 'Matrix':
@@ -284,7 +257,7 @@ class Matrix:
     
     def set_column(self, j, col):
         for i in range(self._nbRows):
-            self.data[i][j] = col.elements[i]
+            self.values[i*j + j] = col[i]
 
     def normalize_columns(self):
         for j in range(self._nbColumns):
@@ -311,9 +284,10 @@ class Matrix:
             # max of the sum of the absolute values for each columns
             return max([sum([abs(e) for e in self.get_column(i)]) for i in range(n_cols)])
         elif norm_type == 'L2':
-            f = importFunctions()
+            from .Functions import qr_algorithm
             #square root of the max eigenvalue
-            return max(f.qr_algorithm(self)[0])**0.5
+            
+            return max(qr_algorithm(self.copy())[0])**0.5
         elif norm_type == 'Linf':
             # max of the sum of the absolute values for each rows
             return max([sum([abs(e) for e in self.get_row(i)]) for i in range(n_rows)])

@@ -2,10 +2,16 @@ from collections.abc import Iterable
 import random
 import numpy as np
 import scipy.linalg as la
-from.Matrix import Matrix
+from .Matrix import Matrix
 
-class SparseMatrix:
+class SparseMatrix(Matrix):
     def __init__(self, values, nbRows=None, nbColumns=None):
+        
+        if type(values) == dict:
+            Matrix.__init__(self, [[values((i, j)) if (i, j) in values else 0 for j in range(nbColumns)] for j in range(nbRows)], nbRows=nbRows, nbColumns=nbColumns)
+        else:
+            Matrix.__init__(self, values, nbRows=nbRows, nbColumns=nbColumns)
+        
         self.nbRows = nbRows
         self.nbColumns = nbColumns
         self.values = {}
@@ -30,14 +36,9 @@ class SparseMatrix:
                             self.values[(i, j)] = values[i*self.nbColumns+j]
         else:
             raise TypeError("Invalid values type {}".format(type(values).__name__))
-
-    def __getitem__(self, index):
-        if isinstance(index, tuple):
-            return self.values.get(index, 0)
-        elif isinstance(index, int):
-            return self.values.get((index, 0), 0)
-        else:
-            raise ValueError("Invalid index")
+        
+    def get_values(self):
+        return tuple((tuple((self[i, j] for j in range(self.nbColumns))) for i in range(self.nbRows)))
 
     def __setitem__(self, index, value):
         if isinstance(index, tuple) and len(index) == 2:
@@ -115,11 +116,6 @@ class SparseMatrix:
 
     def __ne__(self, other):
         return not self.__eq__(other)
-    
-    import random
-
-class SparseMatrix:
-    # Existing methods from previous implementation
 
     def getDeterminant(self):
         if self.nbRows != self.nbColumns:

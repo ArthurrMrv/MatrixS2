@@ -37,14 +37,20 @@ def analyse_function_call(data):
         case "add":
             if len(matrices) < 2:
                 return  ('text', "Error: At least two matrices are required for addition")
+            if matrices[0].shape != matrices[1].shape and not((matrices[0].shape[0] == matrices[1].shape[0] and matrices[1].shape[1] == 1) or (matrices[0].shape[1] == matrices[1].shape[1] and matrices[1].shape[0] == 1)):
+                return ('text', "Error: The matrices must have the same shape (or one has to be a vector)")
             return ('matrix', np.add(matrices[0], matrices[1]))
-        case "subtract":
+        case "substract":
             if len(matrices) < 2:
                 return ('text', "Error: At least two matrices are required for substraction")
+            if matrices[0].shape != matrices[1].shape and not((matrices[0].shape[0] == matrices[1].shape[0] and matrices[1].shape[1] == 1) or (matrices[0].shape[1] == matrices[1].shape[1] and matrices[1].shape[0] == 1)):
+                return ('text', "Error: The matrices must have the same shape (or one has to be a vector)")
             return ('matrix',np.subtract(matrices[0], matrices[1]))
         case "multiply":
             if len(matrices) < 2:
                 return ('text', "Error: At least two matrices are required for multiplication")
+            if matrices[0].shape[1] != matrices[1].shape[0]:
+                return ('text', "Error: The number of columns of the first matrix must be equal to the number of rows of the second matrix")
             return ('matrix', np.matmul(matrices[0], matrices[1]))
         case "transpose":
             if len(matrices) > 1:
@@ -57,6 +63,8 @@ def analyse_function_call(data):
         case "inverse":
             if len(matrices) > 1:
                 return ('text', "Error: Only one matrix is required for inverse")
+            if np.linalg.det(matrices[0]) == 0:
+                return ('text', "Error: The matrix is not invertible")
             return ('matrix', np.linalg.inv(matrices[0]))
         case "eigenvalues":
             if len(matrices) > 1:

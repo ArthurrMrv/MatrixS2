@@ -21,6 +21,7 @@ def qr_algorithm(A: Matrix, num_iterations: int = 10) -> tuple[list, list]:
             for i in range(j):
                 vect_Qi = Vector(Q[i])
                 R[i, j] = Vector.dotProduct(vect_Qi, v)
+
                 v = v - (vect_Qi * R[i, j])
 
             norm_v = v.norm()
@@ -28,7 +29,9 @@ def qr_algorithm(A: Matrix, num_iterations: int = 10) -> tuple[list, list]:
                 continue
 
             R[j, j] = norm_v
-            Q[j] = [x[0] / R[j, j] for x in v]
+            # Q[j] = [x[0] / R[j, j] for x in v]
+            Q[j] = [x[0] / R[j, j] for x in v.get_values()]
+
 
         # Update A with RQ
         A = R * Q
@@ -56,7 +59,7 @@ def qr_decomposition(A : Matrix) -> tuple[Matrix, Matrix]:
 
         R[j, j] = norm_v
         #R[j][j] = v.norm()
-        Q[j] = [x[0] / R[j, j] for x in v]
+        Q[j] = [x[0] / R[j, j] for x in v.get_values()]
 
     return Q, R
 
