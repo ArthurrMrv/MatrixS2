@@ -58,14 +58,57 @@ class Matrix:
     def getNbRows(self) -> int:
         return self._nbRows
     
+    # def getDeterminant(self) -> float:
+    #     if self._nbColumns != self._nbRows:
+    #         raise ValueError("The matrix must be square")
+    #     elif self._nbColumns == 1:
+    #         return self.values[0]
+    #     elif self._nbColumns == 2:
+    #         return self.values[0]*self.values[3] - self.values[1]*self.values[2]
+    #     return sum(self.values[i] * self.getMinor(0, i).getDeterminant() * (-1)**i for i in range(self._nbColumns))
+    
     def getDeterminant(self) -> float:
         if self._nbColumns != self._nbRows:
             raise ValueError("The matrix must be square")
-        elif self._nbColumns == 1:
-            return self.values[0]
-        elif self._nbColumns == 2:
-            return self.values[0]*self.values[3] - self.values[1]*self.values[2]
-        return sum(self.values[i] * self.getMinor(0, i).getDeterminant() * (-1)**i for i in range(self._nbColumns))
+
+        # Create a copy of the matrix to avoid modifying the original
+        copied_matrix = self.copy()
+
+        if not copied_matrix.__mutable:
+            copied_matrix.__mutable = True
+            copied_matrix.values = list(copied_matrix.values)
+
+        # Perform LU decomposition with partial pivoting
+        sign = 1  # Keep track of the sign of the determinant
+        det = 1.0  # Initialize determinant to 1
+
+        for j in range(copied_matrix._nbColumns):
+            # Partial pivoting: Find the row with the largest absolute value in the current column
+            max_row = j
+            for i in range(j + 1, copied_matrix._nbRows):
+                if abs(copied_matrix.values[i * copied_matrix._nbColumns + j]) > abs(copied_matrix.values[max_row * copied_matrix._nbColumns + j]):
+                    max_row = i
+
+            # Swap rows to bring the maximum element to the pivot position
+            if max_row != j:
+                copied_matrix.values[j * copied_matrix._nbColumns:copied_matrix._nbColumns * (j + 1)], copied_matrix.values[max_row * copied_matrix._nbColumns:copied_matrix._nbColumns * (max_row + 1)] = \
+                    copied_matrix.values[max_row * copied_matrix._nbColumns:copied_matrix._nbColumns * (max_row + 1)], copied_matrix.values[j * copied_matrix._nbColumns:copied_matrix._nbColumns * (j + 1)]
+                sign *= -1
+
+            pivot = copied_matrix.values[j * (copied_matrix._nbColumns + 1)]  # Pivot element
+
+            if pivot == 0:  # If pivot is zero, determinant is zero
+                return 0.0
+
+            det *= pivot  # Update determinant with the pivot element
+
+            # Eliminate elements below the pivot
+            for i in range(j + 1, copied_matrix._nbRows):
+                factor = copied_matrix.values[i * copied_matrix._nbColumns + j] / pivot
+                for k in range(j + 1, copied_matrix._nbColumns):
+                    copied_matrix.values[i * copied_matrix._nbColumns + k] -= factor * copied_matrix.values[j * copied_matrix._nbColumns + k]
+                    
+        return det * sign
     
     def getMinor(self, i : int, j : int) -> 'Matrix':
         return Matrix([self.values[k] for k in range(len(self.values)) if k//self._nbColumns != i and k%self._nbColumns != j], nbColumns=self._nbColumns-1)
