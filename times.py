@@ -3,7 +3,7 @@ from Matrices import Matrix
 import cProfile
 
 def main():
-    cProfile.run("run_tests()", "timesMatrices.cprof")
+    cProfile.run("run_tests()", "data/timesMatrices.cprof")
     
 def get_time(func, *args):
     start_time = time.time()

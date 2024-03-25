@@ -73,17 +73,56 @@ class Matrix:
     def transpose(self) -> 'Matrix':
         return Matrix([[self.values[j*self._nbColumns+i] for j in range(self._nbRows)] for i in range(self._nbColumns)])
     
+    # def inverse(self) -> 'Matrix':
+    #     if self._nbColumns != self._nbRows:
+    #         raise ValueError("The matrix must be square")
+    #     determinant = self.getDeterminant()
+    #     if determinant == 0:
+    #         raise ValueError("The matrix is not invertible")
+    #     return Matrix([[self.getMinor(j, i).getDeterminant() * (-1)**(i+j) / determinant for j in range(self._nbColumns)] for i in range(self._nbRows)])
+    
     def inverse(self) -> 'Matrix':
         if self._nbColumns != self._nbRows:
             raise ValueError("The matrix must be square")
-        determinant = self.getDeterminant()
-        if determinant == 0:
-            raise ValueError("The matrix is not invertible")
-        return Matrix([[self.getMinor(j, i).getDeterminant() * (-1)**(i+j) / determinant for j in range(self._nbColumns)] for i in range(self._nbRows)])
+        
+        # Augmenting the matrix with the identity matrix of the same size
+        augmented_matrix = [[self.values[i*self._nbColumns+j] if j < self._nbColumns else int(i == j - self._nbColumns) for j in range(self._nbColumns * 2)] for i in range(self._nbRows)]
+        
+        # Perform Gauss-Jordan elimination
+        for col in range(self._nbColumns):
+            # Pivot for the current column
+            pivot = augmented_matrix[col][col]
+            
+            # If the pivot is zero, swap rows to make it non-zero
+            if pivot == 0:
+                for row in range(col + 1, self._nbRows):
+                    if augmented_matrix[row][col] != 0:
+                        augmented_matrix[col], augmented_matrix[row] = augmented_matrix[row], augmented_matrix[col]
+                        break
+                pivot = augmented_matrix[col][col]
+                if pivot == 0:
+                    raise ValueError("Matrix is singular and cannot be inverted")
+            
+            # Scale the pivot row to make the pivot equal to 1
+            for j in range(col, self._nbColumns * 2):
+                augmented_matrix[col][j] /= pivot
+            
+            # Eliminate the other rows
+            for i in range(self._nbRows):
+                if i != col:
+                    factor = augmented_matrix[i][col]
+                    for j in range(col, self._nbColumns * 2):
+                        augmented_matrix[i][j] -= factor * augmented_matrix[col][j]
+        
+        # Extracting the inverse from the augmented matrix
+        inverse_values = [[augmented_matrix[i][j] for j in range(self._nbColumns, self._nbColumns * 2)] for i in range(self._nbRows)]
+        
+        return Matrix(inverse_values)
     
     def threshold_matrix(self, threshold):
         # return Matrix([map(lambda x : 1 if x >= threshold else 0, row) for row in self.get_values()]) # with a Lamda function
-        return Matrix([[1 if element >= threshold else 0 for element in row] for row in self.get_values()])
+        # return Matrix([[1 if element >= threshold else 0 for element in row] for row in self.get_values()])
+        return Matrix(tuple(map(lambda x: 1 if x >= threshold else 0, self.values)), nbColumns=self._nbColumns, nbRows=self._nbRows, mutable=self.__mutable)
     
     def toInt(self):
         return Matrix([int(v) for v in self.values], nbColumns=self._nbColumns, mutable=self.__mutable)
@@ -118,7 +157,7 @@ class Matrix:
     
     #--- Basic operations ---
     def copy(self) -> 'Matrix':
-        return Matrix(self.get_values())
+        return Matrix(self.values, mutable=self.__mutable, nbColumns=self._nbColumns, nbRows=self._nbRows)
     
     def __add__(self, other) -> 'Matrix':
         Vector = importVector()  # Avoiding circular import
@@ -178,17 +217,17 @@ class Matrix:
             if len(index) != 2:
                 raise ValueError("Invalid index")
             i, j = index
-            return self.get_values()[i][j]
+            return self.values[i*self._nbColumns+j]
         else:
-            return self.get_values()[index]
+            return self.values[index*self._nbColumns:index*self._nbColumns+self._nbColumns]
         
     def get_column(self, j):
         Vector = importVector()
-        return Vector([self.get_values()[i][j] for i in range(self._nbRows)])
+        return Vector([self.values[i*self._nbColumns+j] for i in range(self._nbRows)])
     
     def get_row(self, i):
         Vector = importVector()
-        return Vector(self.get_values()[i])
+        return Vector([self.values[i*self._nbColumns: (i+1)*self._nbColumns]])
     
     def __setitem__(self, index, value):
         
@@ -246,10 +285,6 @@ class Matrix:
     
     def __iter__(self):
         return iter(self.get_values())
-    
-    def get_column(self, j):
-        Vector = importVector()
-        return Vector([self.get_values()[i][j] for i in range(self._nbRows)])
     
     @staticmethod
     def create_diagonal(values : list, *, mutable = False) -> 'Matrix':
